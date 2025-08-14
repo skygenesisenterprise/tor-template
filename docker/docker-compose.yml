@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  tor-relay:
+    build: 
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: tor-relay
+    restart: unless-stopped
+    ports:
+      - "9001:9001"  # ORPort
+      - "9030:9030"  # DirPort
+    volumes:
+      - tor_data:/var/lib/tor
+      - tor_logs:/var/log/tor
+      - ./config/torrc:/etc/tor/torrc:ro
+    environment:
+      - TOR_NICKNAME=${TOR_NICKNAME:-MyTorRelay}
+      - TOR_CONTACT=${TOR_CONTACT:-tor-operator@example.com}
+    networks:
+      - tor-network
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETUID
+      - SETGID
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/run
+
+  monitoring:
+    image: prom/prometheus:latest
+    container_name: tor-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    networks:
+      - tor-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: tor-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana-dashboard.json:/var/lib/grafana/dashboards/tor-dashboard.json:ro
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+    networks:
+      - tor-network
+
+volumes:
+  tor_data:
+  tor_logs:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  tor-network:
+    driver: bridge
