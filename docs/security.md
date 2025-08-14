@@ -3,14 +3,14 @@
 ## System Security
 
 ### 1. Keep System Updated
-\`\`\`bash
+```bash
 # Enable automatic security updates
 sudo apt install unattended-upgrades
 sudo dpkg-reconfigure -plow unattended-upgrades
-\`\`\`
+```
 
 ### 2. Firewall Configuration
-\`\`\`bash
+```bash
 # Configure UFW
 sudo ufw default deny incoming
 sudo ufw default allow outgoing
@@ -18,18 +18,18 @@ sudo ufw allow ssh
 sudo ufw allow 9001/tcp  # Tor ORPort
 sudo ufw allow 9030/tcp  # Tor DirPort
 sudo ufw enable
-\`\`\`
+```
 
 ### 3. Fail2Ban Setup
-\`\`\`bash
+```bash
 # Install and configure fail2ban
 sudo apt install fail2ban
 sudo cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
 sudo systemctl enable fail2ban
-\`\`\`
+```
 
 ### 4. SSH Hardening
-\`\`\`bash
+```bash
 # Edit SSH configuration
 sudo nano /etc/ssh/sshd_config
 
@@ -39,50 +39,50 @@ PermitRootLogin no
 PasswordAuthentication no
 PubkeyAuthentication yes
 MaxAuthTries 3
-\`\`\`
+```
 
 ## Tor-Specific Security
 
 ### 1. Proper File Permissions
-\`\`\`bash
+```bash
 # Ensure correct permissions
 sudo chown -R debian-tor:debian-tor /var/lib/tor
 sudo chmod 700 /var/lib/tor
 sudo chmod 644 /etc/tor/torrc
-\`\`\`
+```
 
 ### 2. Resource Limits
 Add to `/etc/security/limits.conf`:
-\`\`\`
+```bash
 debian-tor soft nofile 65536
 debian-tor hard nofile 65536
 debian-tor soft nproc 4096
 debian-tor hard nproc 4096
-\`\`\`
+```
 
 ### 3. Network Security
-\`\`\`bash
+```bash
 # Disable IPv6 if not needed
 echo 'net.ipv6.conf.all.disable_ipv6 = 1' >> /etc/sysctl.conf
 
 # Enable IP forwarding protection
 echo 'net.ipv4.conf.all.send_redirects = 0' >> /etc/sysctl.conf
 echo 'net.ipv4.conf.all.accept_redirects = 0' >> /etc/sysctl.conf
-\`\`\`
+```
 
 ## Monitoring and Logging
 
 ### 1. Log Monitoring
-\`\`\`bash
+```bash
 # Monitor Tor logs
 sudo journalctl -u tor -f
 
 # Check for suspicious activity
 sudo grep -i "warn\|error" /var/log/tor/notices.log
-\`\`\`
+```
 
 ### 2. System Monitoring
-\`\`\`bash
+```bash
 # Install monitoring tools
 sudo apt install htop iotop nethogs
 
@@ -90,28 +90,28 @@ sudo apt install htop iotop nethogs
 htop
 iotop
 nethogs
-\`\`\`
+```
 
 ### 3. Automated Alerts
 Create `/usr/local/bin/tor-alert.sh`:
-\`\`\`bash
+```bash
 #!/bin/bash
 if ! systemctl is-active --quiet tor; then
     echo "Tor relay is down!" | mail -s "Tor Alert" your-email@example.com
 fi
-\`\`\`
+```
 
 ## Backup and Recovery
 
 ### 1. Configuration Backup
-\`\`\`bash
+```bash
 # Backup script
 #!/bin/bash
 tar -czf tor-backup-$(date +%Y%m%d).tar.gz \
     /etc/tor/torrc \
     /var/lib/tor/keys \
     /var/lib/tor/fingerprint
-\`\`\`
+```
 
 ### 2. Key Management
 - Keep your relay keys secure
